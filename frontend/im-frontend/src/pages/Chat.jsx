@@ -119,14 +119,25 @@ export default function Chat({ user }) {
     e.target.value = '';
   };
 
+  const [showSidebar, setShowSidebar] = useState(true);
+
   return (
     <div style={{
       display: 'flex', height: '100vh', fontFamily: 'Arial',
-      background: '#f5f5f5'
+      background: '#f5f5f5',
+      position: 'relative'
     }}>
       <aside style={{
-        width: 260, borderRight: '1px solid #ddd', background: '#fff',
-        padding: 10, overflowY: 'auto'
+        width: 260, 
+        borderRight: '1px solid #ddd', 
+        background: '#fff',
+        padding: 10, 
+        overflowY: 'auto',
+        position: window.innerWidth < 768 ? 'fixed' : 'relative',
+        left: window.innerWidth < 768 && !showSidebar ? '-260px' : '0',
+        transition: 'left 0.3s ease',
+        zIndex: 100,
+        height: '100vh'
       }}>
         <h3 style={{ color: '#d0021b', marginBottom: 10 }}>联系人</h3>
         {contacts.length === 0 && (
@@ -136,7 +147,10 @@ export default function Chat({ user }) {
         )}
         {contacts.map(c => (
           <div key={c.id}
-            onClick={() => { setCurrent(c); }}
+            onClick={() => { 
+              setCurrent(c); 
+              if (window.innerWidth < 768) setShowSidebar(false);
+            }}
             style={{
               padding: 12, cursor: 'pointer', 
               background: current?.id === c.id ? '#ffeaea' : 'transparent',
@@ -153,9 +167,54 @@ export default function Chat({ user }) {
           </div>
         ))}
       </aside>
+      {window.innerWidth < 768 && !showSidebar && (
+        <button
+          onClick={() => setShowSidebar(true)}
+          style={{
+            position: 'fixed',
+            left: 10,
+            top: 10,
+            zIndex: 99,
+            padding: '8px 12px',
+            background: '#d0021b',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '20px'
+          }}
+        >
+          ☰
+        </button>
+      )}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header style={{ padding: 10, borderBottom: '1px solid #ddd', background: '#fff' }}>
-          <strong style={{ color: '#d0021b' }}>{current ? current.username : '请选择联系人'}</strong>
+        <header style={{ 
+          padding: '12px 16px', 
+          borderBottom: '1px solid #ddd', 
+          background: '#fff',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <strong style={{ color: '#d0021b', fontSize: '16px' }}>
+            {current ? (current.nickname || current.username) : '请选择联系人'}
+          </strong>
+          <button
+            onClick={() => {
+              localStorage.removeItem('token');
+              window.location.reload();
+            }}
+            style={{
+              padding: '6px 12px',
+              background: '#f5f5f5',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            退出登录
+          </button>
         </header>
         <section style={{
           flex: 1, padding: 12, overflowY: 'auto', background: '#f5f5f5'
