@@ -1,18 +1,16 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: im-mysql
+  mongodb:
+    image: mongo:7
+    container_name: im-mongodb
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: chat_app
-      MYSQL_USER: fcim
-      MYSQL_PASSWORD: MyNew@2025Safe
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: MyNew@2025Safe
+      MONGO_INITDB_DATABASE: safechat
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d
+      - mongodb_data:/data/db
     networks:
       - im-network
     healthcheck:
@@ -41,6 +39,12 @@ services:
       - ENABLE_BOSS=false
     volumes:
       - ./backend/im-backend/uploads:/app/uploads
+      - mongodb
+    environment:
+      MONGODB_URI: "mongodb://admin:MyNew%402025Safe@mongodb:27017/safechat?authSource=admin"
+      JWT_SECRET: "super_secret_safechat_key_2025"
+      PORT: "3001"
+      ALLOWED_ORIGINS: "*"
     networks:
       - im-network
     healthcheck:
@@ -57,6 +61,7 @@ services:
       - "80:80"
     volumes:
       - ./frontend/im-frontend/dist:/usr/share/nginx/html
+      - ./frontend/modern:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend
@@ -64,7 +69,7 @@ services:
       - im-network
 
 volumes:
-  mysql_data:
+  mongodb_data:
 
 networks:
   im-network:

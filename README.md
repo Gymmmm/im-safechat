@@ -19,7 +19,30 @@ backend/             Node.js + Express + Socket.IO + MongoDB 后端
 frontend/modern/     纯前端现代化 UI，可直接在浏览器打开 index.html
 ```
 
-## 环境准备
+## 快速开始
+
+### 方式 1: Docker 部署（推荐）
+
+**最简单的部署方式**，适合生产环境：
+
+```bash
+# 克隆项目
+git clone https://github.com/yesuf435/im-safechat.git
+cd im-safechat
+
+# 启动所有服务（MongoDB + Backend + Frontend）
+docker compose up -d
+
+# 查看日志
+docker compose logs -f
+```
+
+访问 `http://localhost` 即可使用。
+
+**生产环境部署**：请查看 [生产环境部署指南 (PRODUCTION_DEPLOYMENT.md)](PRODUCTION_DEPLOYMENT.md)  
+**Docker 详细说明**：请查看 [DOCKER_DEPLOY.md](DOCKER_DEPLOY.md)
+
+### 方式 2: 传统部署
 
 1. **安装依赖**
 
@@ -79,6 +102,12 @@ npm test
 - 所有 REST API 均以 `/api` 开头，需要在请求头附带 `Authorization: Bearer <token>`。
 - 登录页支持快速切换登录/注册表单，并提供界面预览模式以便演示效果。
 - 后台控制台提供一键刷新按钮，可随时查看最新的用户与会话统计。
+
+## 部署状态
+
+🎉 **SafeChat 已完全准备好部署到生产环境！**
+
+查看详细的部署就绪状态：[DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md)
 
 ## 常见问题
 

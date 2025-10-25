@@ -1,11 +1,266 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=chat_with_notifications.html">
-    <title>IM聊天系统</title>
-</head>
-<body>
-    <p>如果您没有被自动重定向， 请<a href="login.html">点击这里</a>。</p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SafeChat - 现代即时通信</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <section class="auth-screen" id="auth-panel">
+        <div class="auth-hero">
+          <div class="hero-logo">💬</div>
+          <h1>SafeChat</h1>
+          <p>连接好友 · 群聊协作 · 跨设备同步</p>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">登录</button>
+          <button class="auth-tab" data-tab="register">注册</button>
+        </div>
+        <form class="auth-form" id="login-form">
+          <label>
+            <span>用户名</span>
+            <input type="text" name="username" required />
+          </label>
+          <label>
+            <span>密码</span>
+            <input type="password" name="password" required />
+          </label>
+          <button type="submit" class="primary">登录</button>
+        </form>
+        <form class="auth-form hidden" id="register-form">
+          <label>
+            <span>用户名</span>
+            <input type="text" name="username" required />
+          </label>
+          <label>
+            <span>显示名称</span>
+            <input type="text" name="displayName" placeholder="可选" />
+          </label>
+          <label>
+            <span>密码</span>
+            <input type="password" name="password" required />
+          </label>
+          <button type="submit" class="primary">注册并登录</button>
+        </form>
+        <div class="auth-actions">
+          <button type="button" id="demo-mode" class="ghost">体验界面预览</button>
+          <a class="ghost-link" href="admin.html" target="_blank" rel="noopener"
+            >打开后台控制台</a
+          >
+        </div>
+      </section>
+
+      <section class="mobile-shell hidden" id="chat-layout">
+        <header class="mobile-header">
+          <div class="mobile-title">
+            <div>
+              <h2 id="mobile-heading">消息</h2>
+              <p id="mobile-subtitle">保持联系，让沟通更简单</p>
+            </div>
+            <div class="mobile-actions">
+              <button class="icon-button ghost" id="new-private-chat" title="发起聊天">
+                ＋
+              </button>
+              <button class="icon-button ghost" id="add-friend-btn" title="搜索好友">
+                🔍
+              </button>
+            </div>
+          </div>
+          <div class="search-panel hidden" id="search-panel">
+            <input
+              type="search"
+              id="user-search"
+              placeholder="输入用户名查找好友"
+              autocomplete="off"
+            />
+            <div id="search-results" class="list empty-state">输入用户名开始搜索</div>
+          </div>
+        </header>
+
+        <main class="mobile-main">
+          <section class="tab-panel active" data-tab="messages">
+            <div class="panel-header">
+              <h3>最近聊天</h3>
+              <button class="link-button" id="new-group-chat">创建群聊</button>
+            </div>
+            <div id="conversations-list" class="list card-list empty-state">暂无会话</div>
+          </section>
+
+          <section class="tab-panel" data-tab="contacts">
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>我的好友</h3>
+                <span class="hint">点击好友即可开始私聊</span>
+              </div>
+              <div id="friends-list" class="list card-list empty-state">暂无好友</div>
+            </div>
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>好友请求</h3>
+              </div>
+              <div class="request-section">
+                <h4>收到的请求</h4>
+                <div id="incoming-requests" class="list card-list empty-state">暂无请求</div>
+              </div>
+              <div class="request-section">
+                <h4>发出的请求</h4>
+                <div id="outgoing-requests" class="list card-list empty-state">暂无请求</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-tab="profile">
+            <div class="profile-card">
+              <div class="avatar" id="profile-avatar">🙂</div>
+              <div class="profile-info">
+                <h3 id="current-user">未登录</h3>
+                <p id="profile-username">@safechat</p>
+              </div>
+            </div>
+            <div class="panel-card">
+              <button class="full-button" id="logout-btn">退出登录</button>
+              <a class="full-button ghost" href="admin.html" target="_blank" rel="noopener"
+                >打开后台控制台</a
+              >
+            </div>
+            <div class="panel-card subtle">
+              <p>
+                SafeChat 提供跨平台的聊天体验，支持实时消息、好友管理、群聊协作以及后台运营数据洞察。
+              </p>
+            </div>
+          </section>
+        </main>
+
+        <nav class="mobile-tabs">
+          <button class="tab-button active" data-tab="messages">
+            <span class="icon">💬</span>
+            <span>消息</span>
+          </button>
+          <button class="tab-button" data-tab="contacts">
+            <span class="icon">👥</span>
+            <span>通讯录</span>
+          </button>
+          <button class="tab-button" data-tab="profile">
+            <span class="icon">😊</span>
+            <span>我的</span>
+          </button>
+        </nav>
+      </section>
+
+      <section class="conversation-sheet hidden" id="conversation">
+        <div class="conversation-shell">
+          <header class="conversation-header">
+            <div class="conversation-bar">
+              <button class="icon-button ghost" id="close-conversation" title="返回列表">
+                <span class="icon">←</span>
+              </button>
+              <div class="conversation-info">
+                <h2 id="conversation-title">会话</h2>
+                <p id="conversation-status">沉浸式交流空间</p>
+              </div>
+              <div class="conversation-controls">
+                <button class="icon-button subtle" type="button" title="语音通话" disabled>
+                  📞
+                </button>
+                <button class="icon-button subtle" type="button" title="更多选项" disabled>
+                  ⋯
+                </button>
+              </div>
+            </div>
+            <div class="conversation-meta-bar">
+              <div class="meta-group">
+                <div class="meta-avatars" id="conversation-avatars"></div>
+                <p id="conversation-meta" class="meta-text">成员</p>
+              </div>
+              <div class="meta-actions">
+                <button class="icon-button subtle" type="button" title="搜索消息" disabled>
+                  🔍
+                </button>
+                <button class="icon-button subtle" type="button" title="查看成员" disabled>
+                  👥
+                </button>
+              </div>
+              <span id="conversation-type" class="type-badge">类型</span>
+            </div>
+          </header>
+          <div class="conversation-body">
+            <div class="placeholder" id="placeholder">
+              <h3>选择一个会话开始聊天</h3>
+              <p>聊天记录会为你自动保存并跨设备同步。</p>
+            </div>
+            <div class="messages" id="messages"></div>
+          </div>
+          <form id="message-form" class="message-form">
+            <div class="input-actions">
+              <button class="icon-button subtle" type="button" title="表情" disabled>☺</button>
+              <button class="icon-button subtle" type="button" title="发送文件" disabled>📎</button>
+            </div>
+            <input
+              type="text"
+              id="message-input"
+              placeholder="输入消息..."
+              autocomplete="off"
+            />
+            <button type="submit" class="send-button" title="发送消息">
+              <span>➤</span>
+            </button>
+          </form>
+          <div class="conversation-actions">
+            <button id="leave-conversation" class="secondary">离开会话</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <template id="message-template">
+      <div class="message">
+        <div class="avatar"></div>
+        <div class="bubble">
+          <div class="meta">
+            <span class="sender"></span>
+            <span class="time"></span>
+          </div>
+          <div class="content"></div>
+        </div>
+      </div>
+    </template>
+
+    <template id="day-divider-template">
+      <div class="day-divider">
+        <span class="line"></span>
+        <span class="date"></span>
+        <span class="line"></span>
+      </div>
+    </template>
+
+    <template id="list-item-template">
+      <div class="list-item">
+        <div class="avatar"></div>
+        <div class="list-content">
+          <div class="list-main">
+            <span class="title"></span>
+            <span class="meta"></span>
+          </div>
+          <div class="subtitle"></div>
+        </div>
+        <div class="badge"></div>
+      </div>
+    </template>
+
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-Gxj1WFJsbgx5caX5/C/PObbIVdQydb9h9NP7VDaRao7IhiHBpjz2uVH54camzato"
+      crossorigin="anonymous"
+    ></script>
+    <script src="config.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
 </html>
