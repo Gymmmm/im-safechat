@@ -19,14 +19,91 @@ export default function Login({ onLogin, onRegisterClick }) {
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', height: '100vh', background: '#fff'
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center',
+      justifyContent: 'center', 
+      height: '100vh', 
+      background: 'linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%)'
     }}>
-      <h2 style={{ color: '#d0021b' }}>登 录</h2>
-      <input placeholder="用户名" value={username} onChange={e => setUsername(e.target.value)} style={{ marginBottom: 10, padding: 8, width: 240 }} />
-      <input placeholder="密 码" type="password" value={password} onChange={e => setPassword(e.target.value)} style={{ marginBottom: 10, padding: 8, width: 240 }} />
-      <button onClick={login} style={{ padding: '8px 20px', backgroundColor: '#d0021b', color: '#fff', border: 'none', borderRadius: 4, marginBottom: 10 }}>登 录</button>
-      <a href="#" onClick={onRegisterClick} style={{ color: '#666' }}>没 有 账 号？去 注 册</a>
+      <div style={{
+        background: '#fff',
+        padding: '40px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        width: '320px'
+      }}>
+        <h2 style={{ 
+          color: '#d0021b', 
+          textAlign: 'center', 
+          marginBottom: '30px',
+          fontSize: '24px',
+          fontWeight: 'bold'
+        }}>
+          登 录
+        </h2>
+        <input 
+          placeholder="用户名" 
+          value={username} 
+          onChange={e => setUsername(e.target.value)}
+          onKeyPress={e => e.key === 'Enter' && login()}
+          style={{ 
+            marginBottom: 15, 
+            padding: '12px', 
+            width: '100%',
+            border: '1px solid #ddd',
+            borderRadius: '6px',
+            fontSize: '14px',
+            boxSizing: 'border-box'
+          }} 
+        />
+        <input 
+          placeholder="密 码" 
+          type="password" 
+          value={password} 
+          onChange={e => setPassword(e.target.value)}
+          onKeyPress={e => e.key === 'Enter' && login()}
+          style={{ 
+            marginBottom: 20, 
+            padding: '12px', 
+            width: '100%',
+            border: '1px solid #ddd',
+            borderRadius: '6px',
+            fontSize: '14px',
+            boxSizing: 'border-box'
+          }} 
+        />
+        <button 
+          onClick={login} 
+          style={{ 
+            padding: '12px 20px', 
+            backgroundColor: '#d0021b', 
+            color: '#fff', 
+            border: 'none', 
+            borderRadius: '6px', 
+            marginBottom: 15,
+            width: '100%',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            cursor: 'pointer'
+          }}
+        >
+          登 录
+        </button>
+        <div style={{ textAlign: 'center' }}>
+          <a 
+            href="#" 
+            onClick={(e) => { e.preventDefault(); onRegisterClick(); }} 
+            style={{ 
+              color: '#666',
+              textDecoration: 'none',
+              fontSize: '14px'
+            }}
+          >
+            没 有 账 号？去 注 册
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
