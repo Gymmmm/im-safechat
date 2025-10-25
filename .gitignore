@@ -4,30 +4,5 @@
 *.jar
 .env
 config.php
-
-# Dependencies
 node_modules/
-
-# Build outputs
 dist/
-build/
-.vite/
-
-# Uploads
-uploads/
-*.tmp
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment files (keep .env.example)
-.env.local
-.env.production.local
