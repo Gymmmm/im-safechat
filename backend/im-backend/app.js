@@ -2,15 +2,18 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const multer = require('multer');
-const path = require('path');
-const { connectDatabase } = require('./config/db');
-const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
-const { logger, httpLogger } = require('./config/logger');
+const path = require('path');require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
 const { Server } = require('socket.io');
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, { 
+  cors: { 
+    origin: '*',
+    methods: ['GET', 'POST']
+  },
+  transports: ['websocket', 'polling']
+});
 
 // 路由引入（只保留一次）
 const setupSocket = require('./socket');
@@ -27,7 +30,15 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// 确保uploads目录存在
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // 文件上传
+const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'audio/mpeg', 'audio/wav', 'application/pdf'];
 const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'audio/mpeg', 'audio/wav'];
 const maxFileSize = (process.env.MAX_FILE_SIZE || 10) * 1024 * 1024; // MB to bytes
 
@@ -55,6 +66,11 @@ const upload = multer({
     cb(null, true);
   }
 });
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: '没有上传文件' });
+  }
+  res.json({ url: `/uploads/${req.file.filename}`, type: req.file.mimetype });
 
 app.post('/upload', upload.single('file'), (req, res, next) => {
   try {

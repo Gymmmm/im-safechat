@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:7
@@ -11,16 +13,32 @@ services:
       - mongodb_data:/data/db
     networks:
       - im-network
-    ports:
-      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   backend:
-    build: ./backend
+    build: 
+      context: ./backend/im-backend
+      dockerfile: Dockerfile
     container_name: im-backend
     restart: always
     ports:
-      - "3000:3001"
+      - "3001:3001"
     depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=fcim
+      - DB_PASSWORD=MyNew@2025Safe
+      - DB_NAME=chat_app
+      - JWT_SECRET=production_jwt_secret_change_me
+      - PORT=3001
+      - ENABLE_BOSS=false
+    volumes:
+      - ./backend/im-backend/uploads:/app/uploads
       - mongodb
     environment:
       MONGODB_URI: "mongodb://admin:MyNew%402025Safe@mongodb:27017/safechat?authSource=admin"
@@ -29,6 +47,11 @@ services:
       ALLOWED_ORIGINS: "*"
     networks:
       - im-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     image: nginx:alpine
@@ -37,6 +60,7 @@ services:
     ports:
       - "80:80"
     volumes:
+      - ./frontend/im-frontend/dist:/usr/share/nginx/html
       - ./frontend/modern:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
