@@ -1,1 +1,8 @@
-*.log\n*.tar.gz\n*.zip\n*.jar\n.env\nconfig.php
+*.log
+*.tar.gz
+*.zip
+*.jar
+.env
+config.php
+node_modules/
+dist/

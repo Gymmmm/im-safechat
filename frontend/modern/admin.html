@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SafeChat 后台控制台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <div id="auth-notice" class="notice hidden">
+        <div class="notice-icon">🔐</div>
+        <h1>需要登录</h1>
+        <p>
+          请先返回 <a href="index.html">SafeChat</a> 登录后再访问后台控制台。
+        </p>
+      </div>
+
+      <div id="dashboard" class="dashboard hidden">
+        <header class="dashboard-header">
+          <div class="brand">
+            <div class="logo">💎</div>
+            <div>
+              <h1>SafeChat 控制台</h1>
+              <p id="operator-name">智能会话运行中心</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <a class="action-link" href="index.html">返回聊天</a>
+            <button id="refresh-all" class="primary">刷新全部数据</button>
+          </div>
+        </header>
+
+        <section class="overview" id="overview-cards"></section>
+
+        <section class="panels">
+          <article class="panel">
+            <header class="panel-header">
+              <div>
+                <h2>用户与增长</h2>
+                <p>了解活跃度与好友关系密度</p>
+              </div>
+              <button id="refresh-users" class="secondary">刷新</button>
+            </header>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>用户</th>
+                    <th>好友数</th>
+                    <th>创建时间</th>
+                    <th>最近上线</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <header class="panel-header">
+              <div>
+                <h2>会话与群组</h2>
+                <p>掌握消息热度与群聊健康度</p>
+              </div>
+              <button id="refresh-conversations" class="secondary">刷新</button>
+            </header>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>会话</th>
+                    <th>类型</th>
+                    <th>成员数</th>
+                    <th>消息量</th>
+                    <th>最近活动</th>
+                  </tr>
+                </thead>
+                <tbody id="conversations-table"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </div>
+    </div>
+
+    <template id="overview-card-template">
+      <div class="card">
+        <div class="card-label"></div>
+        <div class="card-value"></div>
+        <div class="card-meta"></div>
+      </div>
+    </template>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="admin.js" type="module"></script>
+  </body>
+</html>
