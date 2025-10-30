@@ -884,7 +884,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: '服务器内部错误' });
 });
 
-app.get('/health', (req, res) => res.send('SafeChat backend is running'));
+app.get('/health', (req, res) => {
+  const health = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  };
+  res.status(200).json(health);
+});
 
 async function connectDatabase(uri = MONGODB_URI) {
   if (mongoose.connection.readyState === 1) {

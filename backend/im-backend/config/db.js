@@ -1,11 +1,39 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const mongoose = require('mongoose');
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
-});
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/safechat';
 
-module.exports = pool;
+/**
+ * 连接 MongoDB 数据库
+ */
+async function connectDatabase(uri = MONGODB_URI) {
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('✅ MongoDB 连接成功');
+    return mongoose.connection;
+  } catch (error) {
+    console.error('❌ MongoDB 连接失败:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * 断开数据库连接
+ */
+async function disconnectDatabase() {
+  try {
+    await mongoose.disconnect();
+    console.log('✅ MongoDB 已断开连接');
+  } catch (error) {
+    console.error('❌ MongoDB 断开连接失败:', error.message);
+    throw error;
+  }
+}
+
+module.exports = {
+  connectDatabase,
+  disconnectDatabase,
+  mongoose
+};

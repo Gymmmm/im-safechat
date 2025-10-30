@@ -10,14 +10,7 @@
 bash deploy/create-baota-package.sh
 ```
 
-脚本会在 `dist/` 目录下产出 `safechat-baota-release.tar.gz` 与 `safechat-baota-release.zip` 两个文件（内容完全相同），可立即通过 `ls dist/` 查看生成的压缩包：
-
-```bash
-$ ls dist/
-safechat-baota-release.tar.gz  safechat-baota-release.zip
-```
-
-压缩包内部结构如下：
+脚本会在 `dist/` 目录下产出 `safechat-baota-release.tar.gz` 与 `safechat-baota-release.zip` 两个文件（内容完全相同），内部结构如下：
 
 ```
 safechat/

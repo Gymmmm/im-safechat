@@ -42,9 +42,6 @@ pack_archive() {
   else
     echo "[SafeChat] 警告：未找到 zip 命令，仅生成 tar.gz 包"
   fi
-
-  echo "[SafeChat] dist/ 目录当前内容："
-  ls -lh "$DIST_DIR"
 }
 
 copy_backend

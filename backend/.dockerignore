@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+*.log
+.git
+.gitignore
+*.md
+.env
+.env.*
+*.tar.gz
+*.zip
+tests
+coverage
+.vscode
+.idea
+uploads/*
+!uploads/.gitkeep

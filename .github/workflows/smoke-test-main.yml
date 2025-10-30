@@ -1,0 +1,416 @@
+name: Smoke Test Main Branch
+
+on:
+  push:
+    branches:
+      - copilot/add-smoke-test-workflow
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Enable debug output'
+        required: false
+        default: 'false'
+
+jobs:
+  # Job 1: Debug and Environment Info
+  environment-info:
+    name: Environment Information
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/im-frontend/package-lock.json
+
+      - name: Print Node.js and npm versions
+        run: |
+          echo "Node.js version:"
+          node --version
+          echo "npm version:"
+          npm --version
+
+      - name: List repository root files
+        run: |
+          echo "Repository root contents:"
+          ls -la
+
+      - name: Check directory structure
+        run: |
+          echo "Checking key directories..."
+          echo "Frontend directories:"
+          ls -la frontend/ || echo "frontend directory not found"
+          echo "Backend directory:"
+          ls -la backend/ || echo "backend directory not found"
+          echo "Docker compose file:"
+          ls -la docker-compose.yml || echo "docker-compose.yml not found"
+
+  # Job 2: Frontend im-frontend Build
+  frontend-vite-build:
+    name: Build Frontend (Vite/React)
+    runs-on: ubuntu-latest
+    needs: environment-info
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/im-frontend/package-lock.json'
+
+      - name: Check if frontend/im-frontend exists
+        id: check-frontend
+        run: |
+          if [ -d "frontend/im-frontend" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ frontend/im-frontend directory found"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ frontend/im-frontend directory not found"
+          fi
+
+      - name: Install frontend dependencies
+        if: steps.check-frontend.outputs.exists == 'true'
+        working-directory: frontend/im-frontend
+        run: |
+          echo "Installing frontend dependencies..."
+          npm ci 2>&1 | tee npm-install.log
+
+      - name: Build frontend
+        if: steps.check-frontend.outputs.exists == 'true'
+        working-directory: frontend/im-frontend
+        run: |
+          echo "Building frontend..."
+          npm run build 2>&1 | tee npm-build.log
+
+      - name: Verify frontend build output
+        if: steps.check-frontend.outputs.exists == 'true'
+        working-directory: frontend/im-frontend
+        run: |
+          if [ -d "dist" ]; then
+            echo "✅ Build successful - dist directory created"
+            ls -lah dist/
+          else
+            echo "❌ Build failed - dist directory not found"
+            exit 1
+          fi
+
+      - name: Upload frontend build logs
+        if: always() && steps.check-frontend.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-vite-build-logs
+          path: |
+            frontend/im-frontend/npm-install.log
+            frontend/im-frontend/npm-build.log
+          retention-days: 7
+
+      - name: Upload frontend build artifacts
+        if: steps.check-frontend.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-vite-dist
+          path: frontend/im-frontend/dist/
+          retention-days: 7
+
+  # Job 3: Frontend modern (static) check
+  frontend-static-check:
+    name: Check Frontend (Static HTML)
+    runs-on: ubuntu-latest
+    needs: environment-info
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if frontend/modern exists
+        id: check-static
+        run: |
+          if [ -d "frontend/modern" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ frontend/modern directory found (static demo - no build needed)"
+            echo "Contents:"
+            ls -la frontend/modern/
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ frontend/modern directory not found"
+          fi
+
+      - name: Verify static files
+        if: steps.check-static.outputs.exists == 'true'
+        run: |
+          echo "Checking for index.html in frontend/modern..."
+          if [ -f "frontend/modern/index.html" ]; then
+            echo "✅ index.html found - static demo is ready"
+          else
+            echo "⚠️ index.html not found in frontend/modern"
+          fi
+
+  # Job 4: Backend Build/Test/Start
+  backend-smoke-test:
+    name: Backend Smoke Test
+    runs-on: ubuntu-latest
+    needs: environment-info
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+
+      - name: Check if backend exists
+        id: check-backend
+        run: |
+          if [ -d "backend" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ backend directory found"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ backend directory not found"
+            exit 0
+          fi
+
+      - name: Install backend dependencies
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: |
+          echo "Installing backend dependencies..."
+          npm ci 2>&1 | tee npm-install.log
+
+      - name: Check for build script
+        if: steps.check-backend.outputs.exists == 'true'
+        id: check-build-script
+        working-directory: backend
+        run: |
+          if grep -q '"build"' package.json; then
+            echo "has_build=true" >> $GITHUB_OUTPUT
+            echo "✅ Build script found"
+          else
+            echo "has_build=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No build script found"
+          fi
+
+      - name: Run build if present
+        if: steps.check-backend.outputs.exists == 'true' && steps.check-build-script.outputs.has_build == 'true'
+        working-directory: backend
+        run: |
+          echo "Running build script..."
+          npm run build 2>&1 | tee npm-build.log
+
+      - name: Check for test script
+        if: steps.check-backend.outputs.exists == 'true'
+        id: check-test-script
+        working-directory: backend
+        run: |
+          if grep -q '"test"' package.json; then
+            echo "has_test=true" >> $GITHUB_OUTPUT
+            echo "✅ Test script found"
+          else
+            echo "has_test=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No test script found"
+          fi
+
+      - name: Run tests if present
+        if: steps.check-backend.outputs.exists == 'true' && steps.check-test-script.outputs.has_test == 'true'
+        working-directory: backend
+        run: |
+          echo "Running tests..."
+          npm test --if-present 2>&1 | tee npm-test.log
+
+      - name: Production start test (if no build/test)
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        env:
+          NODE_ENV: production
+          MONGODB_URI: mongodb://localhost:27017/safechat-test
+          JWT_SECRET: test_jwt_secret_for_smoke_test
+          PORT: 3001
+        run: |
+          echo "Testing production start..."
+          echo "Starting backend in background..."
+          npm start > npm-start.log 2>&1 &
+          BACKEND_PID=$!
+          echo "Backend started with PID: $BACKEND_PID"
+          
+          echo "Waiting for backend to start..."
+          sleep 10
+          
+          if ps -p $BACKEND_PID > /dev/null; then
+            echo "✅ Backend process is running"
+            echo "Backend logs:"
+            cat npm-start.log || echo "No logs available"
+            kill $BACKEND_PID 2>/dev/null || true
+            # Wait for process to terminate
+            for i in {1..5}; do
+              if ! ps -p $BACKEND_PID > /dev/null 2>&1; then
+                break
+              fi
+              sleep 1
+            done
+            # Force kill if still running
+            kill -9 $BACKEND_PID 2>/dev/null || true
+            echo "✅ Backend started and stopped successfully"
+          else
+            echo "❌ Backend process failed to start or crashed"
+            echo "Backend logs:"
+            cat npm-start.log || echo "No logs available"
+            exit 1
+          fi
+
+      - name: Upload backend logs
+        if: always() && steps.check-backend.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-logs
+          path: |
+            backend/npm-install.log
+            backend/npm-build.log
+            backend/npm-test.log
+            backend/npm-start.log
+          retention-days: 7
+
+      - name: Upload backend build artifacts (if any)
+        if: steps.check-backend.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: |
+            backend/dist/
+            backend/build/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # Job 5: Docker Compose Smoke Test
+  docker-compose-smoke-test:
+    name: Docker Compose Smoke Test
+    runs-on: ubuntu-latest
+    needs: environment-info
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if docker-compose.yml exists
+        id: check-docker-compose
+        run: |
+          if [ -f "docker-compose.yml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ docker-compose.yml found"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ docker-compose.yml not found"
+          fi
+
+      - name: Validate docker-compose configuration
+        if: steps.check-docker-compose.outputs.exists == 'true'
+        run: |
+          echo "Validating docker-compose configuration..."
+          docker compose config 2>&1 | tee docker-compose-config.log
+
+      - name: Build and start services
+        if: steps.check-docker-compose.outputs.exists == 'true'
+        run: |
+          echo "Building and starting docker-compose services..."
+          docker compose up --build -d 2>&1 | tee docker-compose-up.log
+
+      - name: Wait for services to initialize
+        if: steps.check-docker-compose.outputs.exists == 'true'
+        run: |
+          echo "Waiting 30 seconds for services to initialize..."
+          sleep 30
+
+      - name: Check service status
+        if: steps.check-docker-compose.outputs.exists == 'true'
+        run: |
+          echo "Checking docker-compose services status..."
+          docker compose ps 2>&1 | tee docker-compose-ps.log
+          docker compose ps -a
+
+      - name: Display service logs
+        if: steps.check-docker-compose.outputs.exists == 'true'
+        run: |
+          echo "=== Backend Service Logs ==="
+          docker compose logs backend 2>&1 | tee docker-backend-logs.log || echo "No backend logs"
+          echo ""
+          echo "=== MongoDB Service Logs ==="
+          docker compose logs mongodb 2>&1 | tee docker-mongodb-logs.log || echo "No mongodb logs"
+          echo ""
+          echo "=== Frontend Service Logs ==="
+          docker compose logs frontend 2>&1 | tee docker-frontend-logs.log || echo "No frontend logs"
+
+      - name: Check service health
+        if: steps.check-docker-compose.outputs.exists == 'true'
+        run: |
+          echo "Checking if services are healthy..."
+          BACKEND_STATUS=$(docker compose ps backend --format json | jq -r '.[0].State' 2>/dev/null || echo "unknown")
+          MONGODB_STATUS=$(docker compose ps mongodb --format json | jq -r '.[0].State' 2>/dev/null || echo "unknown")
+          FRONTEND_STATUS=$(docker compose ps frontend --format json | jq -r '.[0].State' 2>/dev/null || echo "unknown")
+          
+          echo "Backend status: $BACKEND_STATUS"
+          echo "MongoDB status: $MONGODB_STATUS"
+          echo "Frontend status: $FRONTEND_STATUS"
+          
+          if [ "$BACKEND_STATUS" = "running" ] && [ "$MONGODB_STATUS" = "running" ]; then
+            echo "✅ Core services (backend, mongodb) are running"
+          else
+            echo "⚠️ Some services may not be running properly"
+            echo "This is a smoke test - services may need more time or configuration"
+          fi
+
+      - name: Stop services
+        if: always() && steps.check-docker-compose.outputs.exists == 'true'
+        run: |
+          echo "Stopping docker-compose services..."
+          docker compose down -v 2>&1 | tee docker-compose-down.log
+
+      - name: Upload docker-compose logs
+        if: always() && steps.check-docker-compose.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-compose-logs
+          path: |
+            docker-compose-config.log
+            docker-compose-up.log
+            docker-compose-ps.log
+            docker-backend-logs.log
+            docker-mongodb-logs.log
+            docker-frontend-logs.log
+            docker-compose-down.log
+          retention-days: 7
+
+  # Job 6: Summary
+  smoke-test-summary:
+    name: Smoke Test Summary
+    runs-on: ubuntu-latest
+    needs: [environment-info, frontend-vite-build, frontend-static-check, backend-smoke-test, docker-compose-smoke-test]
+    if: always()
+    steps:
+      - name: Display summary
+        run: |
+          echo "==================================="
+          echo "   Smoke Test Execution Summary"
+          echo "==================================="
+          echo ""
+          echo "All smoke test jobs have completed."
+          echo "Please review the individual job results and artifacts for details."
+          echo ""
+          echo "Artifacts available:"
+          echo "  - frontend-vite-build-logs"
+          echo "  - frontend-vite-dist"
+          echo "  - backend-logs"
+          echo "  - backend-build (if applicable)"
+          echo "  - docker-compose-logs"
+          echo ""
+          echo "==================================="

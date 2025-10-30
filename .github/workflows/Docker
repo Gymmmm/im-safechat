@@ -1,0 +1,39 @@
+name: Docker Compose CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Start services
+        run: docker-compose up -d
+
+      - name: Wait for services to be ready
+        run: |
+          # Example: wait up to 30s for port 5432 (Postgres) to be reachable on localhost
+          # Adjust host/port or use a different check for your services.
+          timeout=30
+          for i in $(seq 1 $timeout); do
+            if nc -z localhost 5432 2>/dev/null; then
+              echo "Service ready"
+              exit 0
+            fi
+            echo "Waiting for service... ($i/$timeout)"
+            sleep 1
+          done
+          echo "Timed out waiting for service" >&2
+          exit 1
+
+      - name: Run tests
+        run: |
+          # run your test commands here
+          docker-compose exec -T app pytest
