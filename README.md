@@ -19,30 +19,7 @@ backend/             Node.js + Express + Socket.IO + MongoDB 后端
 frontend/modern/     纯前端现代化 UI，可直接在浏览器打开 index.html
 ```
 
-## 快速开始
-
-### 方式 1: Docker 部署（推荐）
-
-**最简单的部署方式**，适合生产环境：
-
-```bash
-# 克隆项目
-git clone https://github.com/yesuf435/im-safechat.git
-cd im-safechat
-
-# 启动所有服务（MongoDB + Backend + Frontend）
-docker compose up -d
-
-# 查看日志
-docker compose logs -f
-```
-
-访问 `http://localhost` 即可使用。
-
-**生产环境部署**：请查看 [生产环境部署指南 (PRODUCTION_DEPLOYMENT.md)](PRODUCTION_DEPLOYMENT.md)  
-**Docker 详细说明**：请查看 [DOCKER_DEPLOY.md](DOCKER_DEPLOY.md)
-
-### 方式 2: 传统部署
+## 环境准备
 
 1. **安装依赖**
 
@@ -83,7 +60,20 @@ docker compose logs -f
    bash deploy/create-baota-package.sh
    ```
 
-   脚本会在 `dist/` 下生成 `safechat-baota-release.tar.gz` 与 `safechat-baota-release.zip` 两个压缩包，内容一致，包含后端、前端、启动脚本与精简版部署指南。详细操作步骤见 `deploy/BAOTA_DEPLOY.md`。
+   脚本会在 `dist/` 下生成 `safechat-baota-release.tar.gz` 与 `safechat-baota-release.zip` 两个压缩包，内容一致，包含后端、前端、启动脚本与精简版部署指南。可通过 `ls dist/`（或脚本末尾的提示）快速确认生成结果：
+
+   ```bash
+   $ bash deploy/create-baota-package.sh
+   ...
+   [SafeChat] 打包完成：/workspace/im-safechat/dist/safechat-baota-release.tar.gz
+   [SafeChat] 同步生成 ZIP：/workspace/im-safechat/dist/safechat-baota-release.zip
+   [SafeChat] dist/ 目录当前内容：
+   total 24M
+   -rw-r--r-- 1 root root 12M safechat-baota-release.tar.gz
+   -rw-r--r-- 1 root root 12M safechat-baota-release.zip
+   ```
+
+   详细上线步骤见 `deploy/BAOTA_DEPLOY.md`。
 
 ## 自动化测试
 
@@ -102,12 +92,6 @@ npm test
 - 所有 REST API 均以 `/api` 开头，需要在请求头附带 `Authorization: Bearer <token>`。
 - 登录页支持快速切换登录/注册表单，并提供界面预览模式以便演示效果。
 - 后台控制台提供一键刷新按钮，可随时查看最新的用户与会话统计。
-
-## 部署状态
-
-🎉 **SafeChat 已完全准备好部署到生产环境！**
-
-查看详细的部署就绪状态：[DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md)
 
 ## 常见问题
 
